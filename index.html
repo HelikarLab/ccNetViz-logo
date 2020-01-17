@@ -12,83 +12,22 @@
       margin: 0;
       padding: 0;
     }
-
-    #graph {
-      width: 100%;
-      height: 400px;
-      background: #000;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    #stats {
-      position: absolute;
-      z-index: 55;
-      left: 5px;
-      bottom: 5px;
-      color: rgba(255, 255, 255, 0.7);
-      font-family: 'Open Sans', sans-serif;
-      font-size: 12px;
-    }
-
-    input#range-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 15px;
-      height: 15px;
-      border-radius: 50%;
-      background: #000;
-      border: 1px solid rgb(255, 255, 255);
-      cursor: pointer;
-      transition: 0.5s ease all;
-    }
-
-    input#range-slider::-webkit-slider-thumb:hover {
-      box-shadow: 0 0 0px 3px rgba(255, 255, 255, 0.3);
-    }
-
-    input#range-slider {
-      -webkit-appearance: none;
-      width: 150px;
-      height: 5px;
-      background: rgba(255, 255, 255, 0.7);
-      transition: 0.3s ease all;
-      outline: none;
-      border-radius: 2px;
-      position: relative;
-      top: 2px;
-    }
-
-    input#range-slider:hover {
-      background: rgba(255, 255, 255, 0.9);
-    }
-
-    div#freq-information {
-      position: absolute;
-      bottom: 7px;
-      right: 5px;
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 12px;
-      font-family: 'Open Sans', sans-serif;
-    }
-
-    div#freq-information label {
-      display: inline-block;
-      position: relative;
-      top: 3px;
-      font-weight: bold;
-      letter-spacing: 0.3px;
-    }
   </style>
   <link href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/theme.css">
 
   <script src="static/js/ccNetViz.js"></script>
   <script type="text/javascript">
     window.addEventListener('load', function () {
+
       function drawLogo(c, settings, t) {
         const nodes = [];
         const edges = [];
+
+        window.timer = {
+          start: new Date(),
+          end: undefined
+        };
 
         const x1 = settings.nodeFrequency / settings.width;
         const y1 = settings.nodeFrequency / settings.height;
@@ -234,9 +173,9 @@
         }
 
         let colorSlice = [
-          colorGradient([36, 82, 206], [50, 50, 50], 35, "blue"),
-          colorGradient([204, 34, 34], [50, 50, 50], 35, "red"),
-          colorGradient([35, 180, 70], [50, 50, 50], 35, "green")
+          colorGradient([36, 82, 206], [50, 50, 50], 5, "blue"),
+          colorGradient([204, 34, 34], [50, 50, 50], 5, "red"),
+          colorGradient([35, 180, 70], [50, 50, 50], 5, "green")
         ];
 
         // ccNetViz config
@@ -246,14 +185,15 @@
               color: "rgb(0, 0, 0)"
             },
             node: {
-              texture: "./images/circle.png",
+              texture: "./static/img/circle.png",
               label: {
                 hideSize: 16
               },
               color: "rgb(50, 50, 50)"
             },
             ccNetViz: {
-              color: "rgb(255, 255, 255)"
+              color: "rgb(255, 255, 255)",
+              minSize: 7
             },
             edge: {
               color: "rgb(50, 50, 50)"
@@ -287,7 +227,7 @@
 
           const space = {
             y: (8 / settings.height),
-            x: 6.80 / settings.width
+            x: 8 / settings.width
           };
 
           const logoNodes = [];
@@ -327,7 +267,7 @@
             count: 0,
             index: 0
           },
-          fps: 10,
+          fps: 0.5,
           time: 7,
           circle: {
             size: {
@@ -347,8 +287,9 @@
         animation.frame.count = animation.fps * animation.time;
         animation.circle.size.raise = (animation.circle.size.maximum - animation.circle.size.minimum) / animation.frame.count;
 
-        graph.set(nodeList, edges);
-        graph.draw();
+        graph.set(nodeList, edges).then(() => {
+          graph.draw();
+        });
 
         let animationInstances = [];
         let r = [];
@@ -457,11 +398,12 @@
           }
 
 
-          graph.set(nodeList, edges);
-          graph.draw();
+          graph.set(nodeList, edges).then(() => {
+            graph.draw();
+          });
         }
-
-        settings.information ? document.getElementById("stats").innerText = `${nodes.length} Nodes, ${edges.length} Edges` : false;
+        window.timer.end = new Date();
+        settings.information ? document.getElementById("stats").innerText = `${nodes.length} Nodes, ${edges.length} Edges ( Rendered in ${window.timer.end - window.timer.start}ms )` : false;
         settings.information ? document.getElementById("range-slider").value = settings.nodeFrequency : false;
       }
 
@@ -599,9 +541,14 @@
       const settings = {
         width: document.getElementById("graph").offsetWidth,
         height: document.getElementById("graph").offsetHeight,
-        nodeFrequency: 20,
+        nodeFrequency: 30,
         information: true
       };
+
+      // Mobile
+      if (window.innerWidth <= 980) {
+        settings.nodeFrequency = 60;
+      }
 
       drawLogo(canvas, settings, text);
 
@@ -614,13 +561,12 @@
         drawLogo(c, settings, text);
       });
     }, false);
-
   </script>
 </head>
 
 <body>
   <div id="graph">
-    <canvas id="ccnetviz"></canvas>
+    <canvas id="ccnetviz" width="1351" height="400"></canvas>
     <div id="freq-information">
       <label>Nodes</label>
       <input type="range" min="10" max="80" id="range-slider">
