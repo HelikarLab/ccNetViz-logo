@@ -363,7 +363,7 @@ span.usage-container {
     }
 
     div#freq-information label {
-      display: inline-block;
+    
       position: relative;
       top: 3px;
       font-weight: bold;
